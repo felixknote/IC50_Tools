@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import os
+import re
 
 # IC50 Determination from Microplate Growth Assay
 # Author: Felix Knote
@@ -10,19 +11,19 @@ import os
 # ─────────────────────────────────────────────
 # User settings
 # ─────────────────────────────────────────────
-input_file = r" "  # CSV or XLSX
+input_file = r"example_data\example_plate_ACE-1_P1.csv"  # CSV or XLSX
 base_name = os.path.splitext(os.path.basename(input_file))[0]
 
 # Maximum concentrations (µg/mL)
 max_conc = {
-    "antibiotic1": 1,
-    "antibiotic2": 1,
+    "antibiotic1": 0.120272,
+    "antibiotic2": 0.25088,
 }
 
 # Display names for plots
 antibiotic_names = {
-    "antibiotic1": "",
-    "antibiotic2": "",
+    "antibiotic1": "Cefepim",
+    "antibiotic2": "Aztreonam",
 }
 
 # Blank and growth-control wells
@@ -109,12 +110,35 @@ def reshape_plate_matrix(df):
 # ─────────────────────────────────────────────
 # Load data
 # ─────────────────────────────────────────────
+_WELL_RE = re.compile(r'^([A-Ha-h])(\d{1,2})\s*;\s*([0-9.,\-]+)')
+
+def _to_float(s):
+    s = str(s).strip().replace(" ", "")
+    s = s.replace(",", ".")
+    return float(s)
+
+def _load_vertical_csv(path):
+    """Parse plate-reader vertical list format: 'A01;  0.118' per line."""
+    records = []
+    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            m = _WELL_RE.match(line.strip())
+            if m:
+                records.append({
+                    "Well": m.group(1).upper() + str(int(m.group(2))),
+                    "OD":   _to_float(m.group(3)),
+                })
+    return pd.DataFrame(records) if records else None
+
 if input_file.endswith(".csv"):
-    raw_df = pd.read_csv(input_file, header=None, decimal=";")
+    df = _load_vertical_csv(input_file)
+    if df is None or len(df) != 96:
+        raw_df = pd.read_csv(input_file, header=None, decimal=";")
+        df = reshape_plate_matrix(raw_df)
 else:
     raw_df = pd.read_excel(input_file, header=None, decimal=",")
+    df = reshape_plate_matrix(raw_df)
 
-df = reshape_plate_matrix(raw_df)
 df["OD"] = df["OD"].astype(float).round(3)
 
 
