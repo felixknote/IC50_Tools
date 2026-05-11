@@ -42,14 +42,43 @@ H:   [B]  [D] [D] [D] [D] [D] [D] [D] [D] [D] [D] [B]
 
 ## Input Format
 
-**Plate reader files** — vertical semicolon-delimited format (one well per line):
+### Plate reader files — `01_IC_50.py`
+
+Expects a **plate matrix** export: 8 rows × 12 columns of OD values, no header row.  
+An optional 13th first column containing row labels (A–H) is accepted and ignored.  
+The entire file is treated as data — no metadata lines should be present.
+
+```
+0.051, 0.543, 0.498, 0.421, 0.380, 0.312, 0.245, 0.198, 0.142, 0.109, 0.073, 0.052
+0.049, 0.521, 0.476, ...
+...  (8 rows total, one per plate row A–H)
+```
+
+Decimal separator: `;` for CSV, `,` for XLSX.
+
+---
+
+### Plate reader files — `02_IC_50_Batch.py`, `03_IC50_Replicate_Comparison.py`, `03_IC50_Strain_Comparison.py`
+
+Expects the **vertical list** format exported by many plate readers (one well per line):
+
 ```
 A01;  0.118
 A02;  0.543
+A03;  0.511
 ...
+H12;  0.049
 ```
 
-**Plate map CSV** — pairs antibiotics to plates:
+The parser scans every line with a regex (`^[A-H]\d{1,2}\s*;\s*[number]`) and silently skips all header/metadata lines that do not match — so the file can contain any number of instrument header rows above the data block.  
+Expected: 96 lines of well data per file. A warning is printed if the count differs.
+
+---
+
+### Plate map CSV
+
+Used by `02_IC_50_Batch.py` and the `03_*` scripts to pair antibiotics with plates:
+
 ```
 Index, Antibiotics, Highest concentration [ug/mL]
 1, AmpicillinR, 128
@@ -58,7 +87,9 @@ Index, Antibiotics, Highest concentration [ug/mL]
 4, Tetracycline, 32
 ...
 ```
-Rows are paired: rows 1–2 → Plate 1, rows 3–4 → Plate 2, etc.
+
+Rows are paired: rows 1–2 → Plate 1, rows 3–4 → Plate 2, etc.  
+Separators `,`, `;`, and `\t` are auto-detected.
 
 ---
 
