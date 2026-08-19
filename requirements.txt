@@ -1,0 +1,13 @@
+# IC50_Tools — dependencies
+#
+# Versions are those validated in the Anaconda base environment these scripts
+# run on (Python 3.12). Lower bounds rather than exact pins, so they stay
+# installable on other interpreters.
+#
+#   pip install -r requirements.txt
+
+numpy>=1.26.4
+pandas>=2.2.2          # plate reader input via read_excel
+scipy>=1.13.1          # curve_fit for the 4-parameter logistic dose-response fit
+matplotlib>=3.9.2      # dose-response curve plots
+openpyxl>=3.1.5        # read_excel / ExcelWriter engine for .xlsx input and results

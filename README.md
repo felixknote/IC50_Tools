@@ -105,8 +105,10 @@ openpyxl
 
 Install with:
 ```bash
-pip install numpy pandas scipy matplotlib openpyxl
+pip install -r requirements.txt
 ```
+
+See [requirements.txt](requirements.txt) for the validated versions.
 
 ---
 
